@@ -1,33 +1,124 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
   <meta charset="UTF-8">
+  <title>Sistema Simples</title> 
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    .hidden { display: none; }
+    nav button { margin-right: 10px; }
+    input, textarea { display: block; margin: 5px 0; }
+    section { margin-top: 20px; }
+  </style>
 </head>
 <body>
   <h2>Login</h2>
   <form onsubmit="return login();">
-    <label>Usuário:</label>
-    <input type="text" id="username" required><br><br>
-    <label>Senha:</label>
-    <input type="password" id="password" required><br><br>
+    <input type="text" id="user" placeholder="Usuário" required>
+    <input type="password" id="pass" placeholder="Senha" required>
     <input type="submit" value="Entrar">
   </form>
 
+  <div id="app" class="hidden">
+    <nav>
+      <button onclick="showSection('financeiro')">Financeiro</button>
+      <button onclick="showSection('pacientes')">Pacientes</button>
+      <button onclick="logout()">Sair</button>
+    </nav>
+
+    <!-- FINANCEIRO -->
+    <section id="financeiro" class="hidden">
+      <h3>Caixa Diário</h3>
+      <input type="number" id="valor" placeholder="Valor (use negativo p/ saída)">
+      <textarea id="descricao" placeholder="Descrição"></textarea>
+      <button onclick="adicionarLancamento()">Lançar</button>
+      <button onclick="fecharCaixa()">Fechar Caixa</button>
+      <ul id="lancamentos"></ul>
+    </section>
+
+    <!-- PACIENTES -->
+    <section id="pacientes" class="hidden">
+      <h3>Cadastro de Pacientes</h3>
+      <input type="text" id="nomePaciente" placeholder="Nome do Paciente">
+      <input type="text" id="telefonePaciente" placeholder="Telefone">
+      <textarea id="procedimentos" placeholder="Procedimentos Realizados"></textarea>
+      <button onclick="cadastrarPaciente()">Salvar</button>
+      <ul id="listaPacientes"></ul>
+    </section>
+  </div>
+
   <script>
+    // Login Simples
     function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-
-      // Substitua por seus próprios dados
-      if (user === "admin" && pass === "1234") {
-        alert("Login bem-sucedido!");
-        window.location.href = "pagina-secreta.html"; // redireciona
+      const u = document.getElementById("user").value;
+      const p = document.getElementById("pass").value;
+      if (u === "admin" && p === "1234") {
+        document.querySelector("form").classList.add("hidden");
+        document.getElementById("app").classList.remove("hidden");
+        carregarLancamentos();
+        carregarPacientes();
       } else {
-        alert("Usuário ou senha incorretos.");
+        alert("Credenciais inválidas");
       }
+      return false;
+    }
 
-      return false; // impede o envio do formulário
+    function logout() {
+      location.reload();
+    }
+
+    // Navegação
+    function showSection(id) {
+      document.querySelectorAll("section").forEach(sec => sec.classList.add("hidden"));
+      document.getElementById(id).classList.remove("hidden");
+    }
+
+    // FINANCEIRO
+    let lancamentos = JSON.parse(localStorage.getItem("lancamentos") || "[]");
+
+    function adicionarLancamento() {
+      const valor = parseFloat(document.getElementById("valor").value);
+      const desc = document.getElementById("descricao").value;
+      lancamentos.push({ valor, desc, data: new Date().toLocaleString() });
+      localStorage.setItem("lancamentos", JSON.stringify(lancamentos));
+      carregarLancamentos();
+    }
+
+    function carregarLancamentos() {
+      const ul = document.getElementById("lancamentos");
+      ul.innerHTML = "";
+      lancamentos.forEach((l, i) => {
+        const li = document.createElement("li");
+        li.textContent = `${l.data} | R$ ${l.valor.toFixed(2)} - ${l.desc}`;
+        ul.appendChild(li);
+      });
+    }
+
+    function fecharCaixa() {
+      const total = lancamentos.reduce((acc, l) => acc + l.valor, 0);
+      alert("Total do caixa: R$ " + total.toFixed(2));
+    }
+
+    // PACIENTES
+    let pacientes = JSON.parse(localStorage.getItem("pacientes") || "[]");
+
+    function cadastrarPaciente() {
+      const nome = document.getElementById("nomePaciente").value;
+      const telefone = document.getElementById("telefonePaciente").value;
+      const proc = document.getElementById("procedimentos").value;
+      pacientes.push({ nome, telefone, proc, data: new Date().toLocaleDateString() });
+      localStorage.setItem("pacientes", JSON.stringify(pacientes));
+      carregarPacientes();
+    }
+
+    function carregarPacientes() {
+      const ul = document.getElementById("listaPacientes");
+      ul.innerHTML = "";
+      pacientes.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = `${p.data} | ${p.nome} (${p.telefone}): ${p.proc}`;
+        ul.appendChild(li);
+      });
     }
   </script>
 </body>
